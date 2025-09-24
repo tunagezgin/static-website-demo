@@ -1,0 +1,30 @@
+name: Deploy to S3 with IAM Role
+
+on:
+  push:
+    branches:
+      - main   # main branch'e push olduğunda çalışır
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # OIDC için gerekli
+      contents: read    # kodu çekmek için gerekli
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials via IAM Role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::677276116587:role/Tuna-GitHubActionsDeployRole
+          aws-region: us-east-1   # bucket'ın bulunduğu region
+
+- name: Sync files to S3
+  run: |
+    aws s3 sync . s3://tunademo.com \
+      --exclude ".git/*" \
+      --exclude ".github/*" \
+      --delete
